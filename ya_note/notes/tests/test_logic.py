@@ -81,7 +81,12 @@ class TestNoteEditDelete(TestCase):
         self.url = reverse('notes:add')
         self.form_data['slug'] = self.notes.slug
         response = self.author_client.post(self.url, data=self.form_data)
-        self.assertFormError(response, 'form', 'slug', errors=(self.notes.slug + WARNING))
+        self.assertFormError(
+            response,
+            'form',
+            'slug',
+            errors=(self.notes.slug + WARNING)
+        )
         self.assertEqual(Note.objects.count(), 1)
 
     def test_empty_slug(self):
