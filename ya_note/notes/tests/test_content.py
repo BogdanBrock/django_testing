@@ -2,8 +2,8 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from notes.models import Note
 from notes.forms import NoteForm
+from notes.models import Note
 
 
 User = get_user_model()
@@ -52,4 +52,4 @@ class TestContent(TestCase):
             with self.subTest(url=url):
                 response = self.author_client.get(url)
                 self.assertIn('form', response.context)
-        self.assertIsInstance(response.context['form'], NoteForm)
+                self.assertIsInstance(response.context['form'], NoteForm)

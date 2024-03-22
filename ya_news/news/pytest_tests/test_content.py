@@ -1,28 +1,28 @@
-import pytest
-
 from django.conf import settings
 from django.urls import reverse
-from news.models import News
+import pytest
 
 from news.forms import CommentForm
+from news.models import News
 
 
 @pytest.mark.django_db
-def test_news_count(admin_client, count_news):
-    """Проверяем, что количество записей не больше 10."""
+def test_news_count(client, count_news):
+    """Проверяем, что количество записей не больше 10 на главной странице."""
     News.objects.bulk_create(count_news)
     url = reverse('news:home')
-    response = admin_client.get(url)
+    response = client.get(url)
     assert 'object_list' in response.context
     object_list = response.context['object_list']
     news_count = len(object_list)
     assert news_count == settings.NEWS_COUNT_ON_HOME_PAGE
 
 
-def test_news_order(admin_client):
+@pytest.mark.django_db
+def test_news_order(client):
     """Проверяем сортировку записей."""
     url = reverse('news:home')
-    response = admin_client.get(url)
+    response = client.get(url)
     assert 'object_list' in response.context
     object_list = response.context['object_list']
     all_dates = [news.date for news in object_list]
@@ -30,10 +30,11 @@ def test_news_order(admin_client):
     assert all_dates == sorted_dates
 
 
-def test_comments_order(admin_client, id_for_args_news):
+@pytest.mark.django_db
+def test_comments_order(client, id_for_args_news):
     """Проверяем сортировку комментариев."""
     url = reverse('news:detail', args=(id_for_args_news))
-    response = admin_client.get(url)
+    response = client.get(url)
     assert 'news' in response.context
     news = response.context['news']
     all_comments = news.comment_set.all()

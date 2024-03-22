@@ -1,12 +1,11 @@
-from http import HTTPStatus
-
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
+from http import HTTPStatus
 from pytils.translit import slugify
 
-from notes.models import Note
 from notes.forms import WARNING
+from notes.models import Note
 
 
 User = get_user_model()
@@ -27,7 +26,6 @@ class TestNoteCreation(TestCase):
             'title': cls.TITLE,
             'text': cls.TEXT,
             'slug': cls.SLUG,
-            'author': cls.user
         }
 
     def test_anonymous_user_cant_create_note(self):
@@ -44,7 +42,7 @@ class TestNoteCreation(TestCase):
         self.assertEqual(note.title, self.form_data['title'])
         self.assertEqual(note.text, self.form_data['text'])
         self.assertEqual(note.slug, self.form_data['slug'])
-        self.assertEqual(note.author, self.form_data['author'])
+        self.assertEqual(note.author, self.user)
 
 
 class TestNoteEditDelete(TestCase):
@@ -70,7 +68,6 @@ class TestNoteEditDelete(TestCase):
             'title': cls.TITLE,
             'text': cls.TEXT,
             'slug': cls.SLUG,
-            'author': cls.user
         }
         cls.url_edit = reverse('notes:edit', args=(cls.notes.slug,))
         cls.url_delete = reverse('notes:delete', args=(cls.notes.slug,))
@@ -97,7 +94,7 @@ class TestNoteEditDelete(TestCase):
         response = self.author_client.post(self.url_edit, data=self.form_data)
         self.assertRedirects(response, self.url_success)
         self.assertEqual(Note.objects.count(), 1)
-        new_note = Note.objects.first()
+        new_note = Note.objects.get()
         expected_slug = slugify(self.form_data['title'])
         self.assertEqual(new_note.slug, expected_slug)
 
@@ -128,9 +125,10 @@ class TestNoteEditDelete(TestCase):
         """Проверяем может ли другой
         пользователь редактировать чужую запись.
         """
+        notes = Note.objects.get()
         response = self.reader_client.post(self.url_edit, data=self.form_data)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.notes.refresh_from_db()
-        self.assertNotEqual(self.notes.title, self.form_data['title'])
-        self.assertNotEqual(self.notes.text, self.form_data['text'])
-        self.assertNotEqual(self.notes.slug, self.form_data['slug'])
+        self.assertEqual(self.notes.title, notes.title)
+        self.assertEqual(self.notes.text, notes.text)
+        self.assertEqual(self.notes.slug, notes.slug)

@@ -1,8 +1,7 @@
-import pytest
-
-from pytest_django.asserts import assertRedirects, assertFormError
 from django.urls import reverse
 from http import HTTPStatus
+import pytest
+from pytest_django.asserts import assertRedirects, assertFormError
 
 from news.forms import BAD_WORDS, WARNING
 from news.models import Comment
@@ -43,7 +42,7 @@ def test_anonymous_user_cant_create_comment(
 
 @pytest.mark.parametrize(
     'bad_words',
-    (BAD_WORDS[0], BAD_WORDS[1])
+    (BAD_WORDS)
 )
 def test_user_cant_use_bad_words(author_client, bad_words, id_for_args_news):
     """Проверяем, что автор не может создавать комментарии,
@@ -57,8 +56,10 @@ def test_user_cant_use_bad_words(author_client, bad_words, id_for_args_news):
 
 
 def test_author_can_edit_comment(
+    author,
     author_client,
     form_data,
+    news,
     comment,
     id_for_args_comment,
     id_for_args_news
@@ -73,25 +74,27 @@ def test_author_can_edit_comment(
     assertRedirects(response, f'{url}#comments')
     comment.refresh_from_db()
     assert comment.text == form_data['text']
-    assert comment.author == form_data['author']
-    assert comment.news == form_data['news']
+    assert comment.author == author
+    assert comment.news == news
 
 
 def test_other_user_cant_edit_news(
+    author,
     form_data,
     comment,
     id_for_args_comment,
-    admin_client
+    admin_client,
+    news
 ):
     """Проверяем, анонимный пользователь не может изменять комменатрии."""
     url = reverse('news:edit', args=id_for_args_comment)
     response = admin_client.post(url, form_data)
     assert response.status_code == HTTPStatus.NOT_FOUND
-    comment_text = 'Текст'
+    comment_text = comment.text
     comment.refresh_from_db()
     assert comment.text == comment_text
-    assert comment.author == form_data['author']
-    assert comment.news == form_data['news']
+    assert comment.author == author
+    assert comment.news == news
 
 
 def test_author_can_delete_news(

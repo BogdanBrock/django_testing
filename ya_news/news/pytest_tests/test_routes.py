@@ -1,11 +1,10 @@
-import pytest
-from http import HTTPStatus
-
-
 from django.urls import reverse
+from http import HTTPStatus
+import pytest
 from pytest_django.asserts import assertRedirects
 
 
+@pytest.mark.django_db
 @pytest.mark.parametrize(
     'name, args',
     (
@@ -16,18 +15,19 @@ from pytest_django.asserts import assertRedirects
         ('users:signup', None)
     ),
 )
-def test_pages_availability_for_anonymous_user(admin_client, name, args):
+def test_pages_availability_for_anonymous_user(client, name, args):
     """Проверяем, что мы можем зайти на ссылку."""
     url = reverse(name, args=args)
-    response = admin_client.get(url)
+    response = client.get(url)
     assert response.status_code == HTTPStatus.OK
 
 
+@pytest.mark.django_db
 @pytest.mark.parametrize(
     'parametrized_client, expected_status',
 
     (
-        (pytest.lazy_fixture('not_author_client'), HTTPStatus.NOT_FOUND),
+        (pytest.lazy_fixture('admin_client'), HTTPStatus.NOT_FOUND),
         (pytest.lazy_fixture('author_client'), HTTPStatus.OK)
     ),
 )

@@ -1,8 +1,8 @@
-import pytest
 from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.test.client import Client
+import pytest
 
 from news.models import Comment, News
 
@@ -13,21 +13,9 @@ def author(django_user_model):
 
 
 @pytest.fixture
-def not_author(django_user_model):
-    return django_user_model.objects.create(username='Не автор')
-
-
-@pytest.fixture
 def author_client(author):
     client = Client()
     client.force_login(author)
-    return client
-
-
-@pytest.fixture
-def not_author_client(not_author):
-    client = Client()
-    client.force_login(not_author)
     return client
 
 
@@ -59,11 +47,9 @@ def id_for_args_comment(comment):
 
 
 @pytest.fixture
-def form_data(author, news):
+def form_data():
     return {
-        'text': 'Новый текст',
-        'author': author,
-        'news': news
+        'text': 'Новый текст'
     }
 
 
