@@ -1,5 +1,7 @@
-# conftest.py
 import pytest
+from datetime import datetime, timedelta
+
+from django.conf import settings
 from django.test.client import Client
 
 from news.models import Comment, News
@@ -31,21 +33,19 @@ def not_author_client(not_author):
 
 @pytest.fixture
 def news():
-    news = News.objects.create(
+    return News.objects.create(
         title='Заголовок',
         text='Текст заметки'
     )
-    return news
 
 
 @pytest.fixture
 def comment(author, news):
-    comment = Comment.objects.create(
+    return Comment.objects.create(
         text='Текст',
         author=author,
         news=news
     )
-    return comment
 
 
 @pytest.fixture
@@ -59,7 +59,38 @@ def id_for_args_comment(comment):
 
 
 @pytest.fixture
-def form_data():
+def form_data(author, news):
     return {
         'text': 'Новый текст',
+        'author': author,
+        'news': news
     }
+
+
+@pytest.fixture
+def count_news():
+    today = datetime.today()
+    all_news = []
+    for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1):
+        news = News(
+            title=f'Новость {index}',
+            text='Просто текст.',
+            date=today - timedelta(days=index)
+        )
+        all_news.append(news)
+    return all_news
+
+
+@pytest.fixture
+def count_comments(news, author):
+    today = datetime.today()
+    all_comments = []
+    for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1):
+        news = Comment(
+            text=f'Комментарий {index}',
+            created=today - timedelta(days=index),
+            news=news,
+            author=author
+        )
+        all_comments.append(news)
+    return all_comments

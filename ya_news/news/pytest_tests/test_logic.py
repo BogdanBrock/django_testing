@@ -8,13 +8,14 @@ from news.forms import BAD_WORDS, WARNING
 from news.models import News, Comment
 
 
-def test_user_can_create_news(
+def test_user_can_create_comment(
     author_client,
     author,
     news,
     form_data,
     id_for_args_news
 ):
+    """Проверяем, что автор может создавать комментарии."""
     url = reverse('news:detail', args=id_for_args_news)
     response = author_client.post(url, data=form_data)
     assertRedirects(response, f'{url}#comments')
@@ -26,7 +27,12 @@ def test_user_can_create_news(
 
 
 @pytest.mark.django_db
-def test_anonymous_user_cant_create_news(client, form_data, id_for_args_news):
+def test_anonymous_user_cant_create_comment(
+    client,
+    form_data,
+    id_for_args_news
+):
+    """Проверяем, что анонимный пользователь не может создавать комментарии."""
     url = reverse('news:detail', args=id_for_args_news)
     response = client.post(url, data=form_data)
     login_url = reverse('users:login')
@@ -35,19 +41,29 @@ def test_anonymous_user_cant_create_news(client, form_data, id_for_args_news):
     assert Comment.objects.count() == 0
 
 
-def test_user_cant_use_bad_words(author_client, id_for_args_news):
+@pytest.mark.parametrize(
+    'bad_words',
+    (BAD_WORDS[0], BAD_WORDS[1])
+)
+def test_user_cant_use_bad_words(author_client, bad_words, id_for_args_news):
+    """Проверяем, что автор не может создавать комментарии,
+    в которых содержатся слова из запрещенного списка.
+    """
     url = reverse('news:detail', args=id_for_args_news)
-    bad_words_data = {'text': f'Какой-то текст, {BAD_WORDS[0]}, еще текст'}
+    bad_words_data = {'text': f'Какой-то текст, {bad_words}, еще текст'}
     response = author_client.post(url, data=bad_words_data)
     assertFormError(response, 'form', 'text', errors=WARNING)
     assert Comment.objects.count() == 0
 
 
-def test_author_can_edit_note(
-    author_client, form_data,
-    comment, id_for_args_comment,
+def test_author_can_edit_comment(
+    author_client,
+    form_data,
+    comment,
+    id_for_args_comment,
     id_for_args_news
 ):
+    """Проверяем, что автор может изменять комменатрии."""
     url = reverse('news:detail', args=id_for_args_news)
     response = author_client.post(reverse(
         'news:edit',
@@ -57,24 +73,33 @@ def test_author_can_edit_note(
     assertRedirects(response, f'{url}#comments')
     comment.refresh_from_db()
     assert comment.text == form_data['text']
+    assert comment.author == form_data['author']
+    assert comment.news == form_data['news']
 
 
-def test_other_user_cant_edit_note(
-    not_author_client, form_data,
-    news, id_for_args_comment
+def test_other_user_cant_edit_news(
+    form_data,
+    comment,
+    id_for_args_comment,
+    admin_client
 ):
+    """Проверяем, анонимный пользователь не может изменять комменатрии."""
     url = reverse('news:edit', args=id_for_args_comment)
-    response = not_author_client.post(url, form_data)
+    response = admin_client.post(url, form_data)
     assert response.status_code == HTTPStatus.NOT_FOUND
-    note_from_db = News.objects.get(id=news.id)
-    assert news.text == note_from_db.text
+    comment_text = 'Текст'
+    comment.refresh_from_db()
+    assert comment.text == comment_text
+    assert comment.author == form_data['author']
+    assert comment.news == form_data['news']
 
 
-def test_author_can_delete_note(
+def test_author_can_delete_news(
     author_client,
     id_for_args_comment,
     id_for_args_news
 ):
+    """Проверяем, что автор может удалять комменатрии."""
     url_delete = reverse('news:delete', args=id_for_args_comment)
     url_detail = reverse('news:detail', args=id_for_args_news)
     response = author_client.post(url_delete)
@@ -82,12 +107,13 @@ def test_author_can_delete_note(
     assert Comment.objects.count() == 0
 
 
-def test_other_user_cant_delete_note(
-    not_author_client,
+def test_other_user_cant_delete_news(
+    admin_client,
     form_data,
     id_for_args_comment
 ):
+    """Проверяем, анонимный пользователь не может удалять комменатрии."""
     url = reverse('news:delete', args=id_for_args_comment)
-    response = not_author_client.post(url)
+    response = admin_client.post(url)
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert Comment.objects.count() == 1

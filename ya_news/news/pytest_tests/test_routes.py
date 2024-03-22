@@ -16,9 +16,10 @@ from pytest_django.asserts import assertRedirects
         ('users:signup', None)
     ),
 )
-def test_pages_availability_for_anonymous_user(not_author_client, name, args):
+def test_pages_availability_for_anonymous_user(admin_client, name, args):
+    """Проверяем, что мы можем зайти на ссылку."""
     url = reverse(name, args=args)
-    response = not_author_client.get(url)
+    response = admin_client.get(url)
     assert response.status_code == HTTPStatus.OK
 
 
@@ -37,6 +38,7 @@ def test_pages_availability_for_anonymous_user(not_author_client, name, args):
 def test_pages_availability_for_different_users(
         parametrized_client, name, id_for_args_comment, expected_status
 ):
+    """Проверяем запрос сервера для автора новости и другого пользователя."""
     url = reverse(name, args=(id_for_args_comment))
     response = parametrized_client.get(url)
     assert response.status_code == expected_status
@@ -50,6 +52,9 @@ def test_pages_availability_for_different_users(
     ),
 )
 def test_redirects_comment(client, name, args):
+    """Проверяем, что анонимный пользователь перенаправляется на
+    страницу для того, чтобы войти в учетную запись.
+    """
     login_url = reverse('users:login')
     url = reverse(name, args=args)
     expected_url = f'{login_url}?next={url}'
