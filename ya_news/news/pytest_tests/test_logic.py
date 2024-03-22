@@ -5,7 +5,7 @@ from django.urls import reverse
 from http import HTTPStatus
 
 from news.forms import BAD_WORDS, WARNING
-from news.models import News, Comment
+from news.models import Comment
 
 
 def test_user_can_create_comment(
