@@ -64,7 +64,7 @@ def count_news():
             date=today - timedelta(days=index)
         )
         all_news.append(news)
-    return News.objects.bulk_create(all_news)
+    News.objects.bulk_create(all_news)
 
 
 @pytest.fixture
@@ -78,4 +78,5 @@ def count_comments(news, author):
             news=news,
             author=author
         )
-    return all_comments.append(comment)
+        all_comments.append(comment)
+    Comment.objects.bulk_create(all_comments)

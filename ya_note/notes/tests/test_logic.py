@@ -126,9 +126,9 @@ class TestNoteEditDelete(TestCase):
         """Проверяем может ли другой
         пользователь редактировать чужую запись.
         """
+        response = self.reader_client.post(self.url_edit, data=self.form_data)
         pk = self.notes.id
         notes = Note.objects.get(pk=pk)
-        response = self.reader_client.post(self.url_edit, data=self.form_data)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertEqual(self.notes.title, notes.title)
         self.assertEqual(self.notes.text, notes.text)
