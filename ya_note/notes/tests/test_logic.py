@@ -1,7 +1,8 @@
+from http import HTTPStatus
+
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
-from http import HTTPStatus
 from pytils.translit import slugify
 
 from notes.forms import WARNING
@@ -125,10 +126,10 @@ class TestNoteEditDelete(TestCase):
         """Проверяем может ли другой
         пользователь редактировать чужую запись.
         """
-        notes = Note.objects.get()
+        pk = self.notes.id
+        notes = Note.objects.get(pk=pk)
         response = self.reader_client.post(self.url_edit, data=self.form_data)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        self.notes.refresh_from_db()
         self.assertEqual(self.notes.title, notes.title)
         self.assertEqual(self.notes.text, notes.text)
         self.assertEqual(self.notes.slug, notes.slug)

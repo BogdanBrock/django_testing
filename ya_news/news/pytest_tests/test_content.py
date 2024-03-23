@@ -1,15 +1,13 @@
+import pytest
 from django.conf import settings
 from django.urls import reverse
-import pytest
 
 from news.forms import CommentForm
-from news.models import News
 
 
 @pytest.mark.django_db
 def test_news_count(client, count_news):
     """Проверяем, что количество записей не больше 10 на главной странице."""
-    News.objects.bulk_create(count_news)
     url = reverse('news:home')
     response = client.get(url)
     assert 'object_list' in response.context
@@ -19,7 +17,7 @@ def test_news_count(client, count_news):
 
 
 @pytest.mark.django_db
-def test_news_order(client):
+def test_news_order(client, count_news):
     """Проверяем сортировку записей."""
     url = reverse('news:home')
     response = client.get(url)
@@ -31,7 +29,7 @@ def test_news_order(client):
 
 
 @pytest.mark.django_db
-def test_comments_order(client, id_for_args_news):
+def test_comments_order(client, id_for_args_news, count_comments):
     """Проверяем сортировку комментариев."""
     url = reverse('news:detail', args=(id_for_args_news))
     response = client.get(url)

@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 
+import pytest
 from django.conf import settings
 from django.test.client import Client
-import pytest
 
 from news.models import Comment, News
 
@@ -64,7 +64,7 @@ def count_news():
             date=today - timedelta(days=index)
         )
         all_news.append(news)
-    return all_news
+    return News.objects.bulk_create(all_news)
 
 
 @pytest.fixture
@@ -72,11 +72,10 @@ def count_comments(news, author):
     today = datetime.today()
     all_comments = []
     for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1):
-        news = Comment(
+        comment = Comment(
             text=f'Комментарий {index}',
             created=today - timedelta(days=index),
             news=news,
             author=author
         )
-        all_comments.append(news)
-    return all_comments
+    return all_comments.append(comment)
